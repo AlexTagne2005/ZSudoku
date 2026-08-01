@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ZenSudoku</string>
+    <string name="tagline">Calm, frictionless Sudoku</string>
+    <string name="easy">Easy</string>
+    <string name="medium">Medium</string>
+    <string name="hard">Hard</string>
+    <string name="expert">Expert</string>
+    <string name="new_game">New Game</string>
+    <string name="resume_game">Resume Game</string>
+    <string name="restart">Restart</string>
+    <string name="undo">Undo</string>
+    <string name="redo">Redo</string>
+    <string name="erase">Erase</string>
+    <string name="pencil">Pencil</string>
+    <string name="hint">Hint</string>
+    <string name="settings">Settings</string>
+    <string name="statistics">Statistics</string>
+    <string name="zen_quotes">In stillness, clarity unfolds.</string>
+</resources>

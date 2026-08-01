@@ -1,0 +1,42 @@
+# Cahier des Charges : ZenSudoku (Nom provisoire)
+
+## 1. Vision et Objectifs du Projet
+ZenSudoku est une application de Sudoku conçue pour prendre le contre-pied des applications de jeux mobiles actuelles. L'objectif est d'offrir une expérience de jeu **apaisante, sans friction et respectueuse de l'utilisateur**. 
+L'application ne doit générer aucun stress (pas de chronomètre agressif, pas de limite d'erreurs stricte) et proposer une monétisation non intrusive qui préserve l'immersion et la détente.
+
+## 2. Expérience Utilisateur (UX) & Interface (UI)
+Le design doit respirer la tranquillité et la clarté.
+
+* **Minimalisme :** L'interface principale se concentre uniquement sur la grille et le pavé numérique. Les menus sont réduits au strict minimum.
+* **Palette de couleurs :** 
+  * *Thème clair :* Tons pastel, beige, blanc cassé, bois clair.
+  * *Thème sombre :* Bleu nuit, gris ardoise (reposant pour les yeux).
+* **Le "Mode Zen" (Par défaut) :**
+  * Le chronomètre est masqué (activable via les paramètres).
+  * Le compteur d'erreurs est désactivé ou indicatif (pas de "Game Over" après 3 erreurs).
+* **Assistance visuelle douce :** Lorsqu'un chiffre est sélectionné sur le clavier ou la grille, toutes les occurrences de ce chiffre s'illuminent subtilement pour faciliter la lecture.
+
+## 3. Fonctionnalités Principales (MVP - Produit Minimum Viable)
+* **Génération de grilles :** Algorithme capable de générer des grilles jouables réparties en 4 niveaux de difficulté (Facile, Moyen, Difficile, Expert).
+* **Saisie intuitive (Double mode) :**
+  1. *Chiffre d'abord :* Sélectionner un chiffre, puis tapoter plusieurs cases pour le placer.
+  2. *Case d'abord :* Sélectionner une case, puis tapoter un chiffre.
+* **Mode Brouillon (Crayon) :** Permet d'inscrire de petits chiffres en notes dans une case. Doit s'activer/désactiver en un clic.
+* **Annulation illimitée :** Un bouton "Retour" (Undo) permettant d'annuler toutes les actions jusqu'au début de la partie.
+* **Sauvegarde automatique :** La progression, le temps (si activé) et les notes brouillon sont sauvegardés instantanément. Si l'utilisateur ferme l'application, il reprend exactement où il s'est arrêté au prochain lancement.
+
+## 4. Stratégie de Monétisation (Rentabilité respectueuse)
+Le modèle économique repose sur l'équilibre entre rentabilité et confort de jeu.
+
+* **Bannière non intrusive :** Une petite bannière publicitaire fixe, située tout en bas ou tout en haut de l'écran, strictement en dehors de la zone interactive. Elle ne doit jamais gêner la frappe.
+* **Publicité Récompensée (Opt-in) :** La monétisation active est basée sur le choix. L'utilisateur peut choisir de visionner une publicité vidéo pour obtenir un indice (ex: révéler le chiffre correct d'une case sélectionnée). L'action est toujours initiée par le joueur.
+* **Aucune pop-up interstitielle :** Aucune vidéo publicitaire ne doit se lancer de manière inopinée au milieu d'une réflexion ou entre deux écrans sans le consentement du joueur.
+
+## 5. Choix Techniques & Architecture (Pensé pour AI Studio)
+Le projet sera développé de manière itérative, en privilégiant des technologies standards pour faciliter la génération de code.
+
+* **Front-End :** HTML5, CSS3, JavaScript (Vanilla - sans framework lourd dans un premier temps).
+* **Stockage :** `localStorage` du navigateur pour la sauvegarde de l'état de la grille et des préférences (thème, son).
+* **Distribution :** 
+  * Première phase : Progressive Web App (PWA) jouable directement dans le navigateur pour des tests rapides.
+  * Seconde phase : Encapsulation avec Capacitor.js ou Cordova pour générer les fichiers natifs (APK pour Android, IPA pour iOS) et intégrer les SDK publicitaires (ex: Google AdMob).
