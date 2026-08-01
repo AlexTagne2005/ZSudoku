@@ -18,6 +18,8 @@ class SudokuRepository(
     val stats: Flow<StatsEntity> = statsDao.getStats().map { it ?: StatsEntity() }
     val settings: Flow<SettingsEntity> = settingsDao.getSettings().map { it ?: SettingsEntity() }
 
+    suspend fun getStatsDirect(): StatsEntity = statsDao.getStatsDirect() ?: StatsEntity()
+
     suspend fun saveGameProgress(
         difficultyName: String,
         cells: List<SudokuCell>,

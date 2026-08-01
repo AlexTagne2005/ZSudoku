@@ -15,6 +15,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.model.Difficulty
+import com.example.ui.components.BrainTierGraduationModal
+import com.example.ui.components.GesturePracticeModal
 import com.example.ui.components.InteractiveTutorialModal
 import com.example.ui.screens.GameScreen
 import com.example.ui.screens.HomeScreen
@@ -119,7 +121,8 @@ fun ZenSudokuApp(
                 starsCount = uiState.starsCount,
                 isTimerRunning = uiState.isTimerRunning,
                 isTimerVisible = uiState.settings.isTimerVisible,
-                isDarkTheme = uiState.settings.isDarkMode,
+                isDarkTheme = uiState.settings.isDarkMode || uiState.settings.colorTheme == "OLED",
+                isHapticsEnabled = uiState.settings.isHapticsEnabled,
                 notesStyle = uiState.settings.notesStyle,
                 isAmbientEnabled = uiState.settings.isAmbientEnabled,
                 rainVolume = uiState.settings.rainVolume,
@@ -135,6 +138,7 @@ fun ZenSudokuApp(
                 shakeTriggerCount = uiState.shakeTriggerCount,
                 isDailyChallenge = uiState.isDailyChallenge,
                 showTutorial = uiState.showTutorial,
+                isAdaptiveModeActive = uiState.isAdaptiveModeActive,
                 onCellClick = { r, c -> viewModel.onCellClicked(r, c) },
                 onDigitClick = { digit -> viewModel.onKeypadDigitClicked(digit) },
                 onToggleInputMode = { viewModel.toggleInputMode() },
@@ -174,8 +178,22 @@ fun ZenSudokuApp(
             SettingsScreen(
                 settings = uiState.settings,
                 onSettingsChanged = { newSettings -> viewModel.updateSettings(newSettings) },
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onOpenGesturePractice = { viewModel.toggleGesturePractice(true) }
             )
         }
+    }
+
+    if (uiState.showGesturePractice) {
+        GesturePracticeModal(
+            onDismiss = { viewModel.toggleGesturePractice(false) }
+        )
+    }
+
+    uiState.graduatedBrainTierInfo?.let { brainInfo ->
+        BrainTierGraduationModal(
+            brainInfo = brainInfo,
+            onDismiss = { viewModel.dismissBrainGraduationModal() }
+        )
     }
 }

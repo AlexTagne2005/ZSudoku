@@ -3,6 +3,7 @@ package com.example.ui.theme
 import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -109,6 +110,20 @@ private val SunsetDarkScheme = darkColorScheme(
     onSurfaceVariant = DarkTextMuted
 )
 
+private val OledDarkScheme = darkColorScheme(
+    primary = OledPrimary,
+    onPrimary = OledOnPrimary,
+    primaryContainer = Color(0xFF00363D),
+    onPrimaryContainer = Color(0xFF80F2FF),
+    secondary = Color(0xFFFFD600),
+    background = OledBg,
+    surface = OledSurface,
+    surfaceVariant = OledVariant,
+    onBackground = OledTextPrimary,
+    onSurface = OledTextPrimary,
+    onSurfaceVariant = OledTextMuted
+)
+
 @Composable
 fun ZenSudokuTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -125,6 +140,7 @@ fun ZenSudokuTheme(
             "FOREST" -> if (darkTheme) ForestDarkScheme else ForestLightScheme
             "OCEAN" -> if (darkTheme) OceanDarkScheme else OceanLightScheme
             "SUNSET" -> if (darkTheme) SunsetDarkScheme else SunsetLightScheme
+            "OLED" -> OledDarkScheme
             else -> if (darkTheme) DarkColorScheme else LightColorScheme
         }
     }

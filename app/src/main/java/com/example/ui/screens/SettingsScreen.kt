@@ -40,6 +40,7 @@ fun SettingsScreen(
     settings: SettingsEntity,
     onSettingsChanged: (SettingsEntity) -> Unit,
     onBack: () -> Unit,
+    onOpenGesturePractice: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -144,6 +145,27 @@ fun SettingsScreen(
                 onCheckedChange = { onSettingsChanged(settings.copy(isHapticsEnabled = it, isSoundEnabled = it)) }
             )
 
+            SettingSwitchRow(
+                title = "Difficulté Adaptative Intelligente",
+                subtitle = "Ajuste subtilement les contraintes selon vos performances",
+                checked = settings.isAdaptiveDifficultyEnabled,
+                testTag = "switch_adaptive_difficulty",
+                onCheckedChange = { onSettingsChanged(settings.copy(isAdaptiveDifficultyEnabled = it)) }
+            )
+
+            if (onOpenGesturePractice != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                androidx.compose.material3.OutlinedButton(
+                    onClick = onOpenGesturePractice,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("open_gesture_practice_button"),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Text("🖐️ Entraînement interactif aux Gestes", fontWeight = FontWeight.Bold)
+                }
+            }
+
             Spacer(modifier = Modifier.height(12.dp))
 
             Text(
@@ -222,7 +244,8 @@ private fun ThemeSelectionRow(
         Triple("ZEN", "Zen", androidx.compose.ui.graphics.Color(0xFF386641)),
         Triple("FOREST", "Forêt", androidx.compose.ui.graphics.Color(0xFF2D5A27)),
         Triple("OCEAN", "Océan", androidx.compose.ui.graphics.Color(0xFF0284C7)),
-        Triple("SUNSET", "Sunset", androidx.compose.ui.graphics.Color(0xFFC2410C))
+        Triple("SUNSET", "Sunset", androidx.compose.ui.graphics.Color(0xFFC2410C)),
+        Triple("OLED", "OLED", androidx.compose.ui.graphics.Color(0xFF00E5FF))
     )
 
     Row(

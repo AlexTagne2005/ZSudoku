@@ -52,6 +52,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.border
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
+
 @Composable
 fun InteractiveTutorialModal(
     onDismiss: () -> Unit
@@ -72,20 +81,20 @@ fun InteractiveTutorialModal(
                 subtitle = "Cellule d'abord vs Chiffre d'abord",
                 icon = Icons.Default.TouchApp,
                 description = "• Cellule d'abord : Touchez une case vide, puis appuyez sur un chiffre du pavé numérique.\n\n• Chiffre d'abord : Sélectionnez un chiffre sur le pavé numérique pour le placer rapidement dans plusieurs cases successives.",
-                tip = "Vous pouvez basculer le mode de saisie à tout moment avec l'icône de la main sur l'action bar."
+                tip = "Glissez ou touchez l'icône de la main pour basculer de mode instantanément !"
             ),
             TutorialStep(
-                title = "Mode Crayon & Notes",
-                subtitle = "Noter vos hypothèses",
+                title = "Mode Crayon & Annuler/Rétablir",
+                subtitle = "Notes & Pile d'annulation",
                 icon = Icons.Default.Edit,
-                description = "Activez le mode Crayon (icône crayon) pour inscrire des petits chiffres candidats dans une case lorsque vous hésitez.\n\nLes notes s'effacent automatiquement des lignes et colonnes associées dès que vous trouvez le bon chiffre !",
-                tip = "Utilisez Annuler (icône retour) si vous souhaitez revenir sur vos derniers coups."
+                description = "Inscrivez des hypothèses en mode Crayon. L'application gère une pile d'annulation/rétablissement (Undo/Redo) illimitée pour tester vos théories sans crainte !",
+                tip = "Tap à deux doigts sur la grille pour effacer rapidement une case !"
             ),
             TutorialStep(
                 title = "Indices & Ambiance Zen",
                 subtitle = "Progressez en toute sérénité",
                 icon = Icons.Default.Lightbulb,
-                description = "Bloqué sur une grille ? Touchez l'icône de l'ampoule d'Indice pour dévoiler la réponse d'une case.\n\nProfitez d'effets sonores apaisants et personnalisez le thème visuel (Zen, Forêt, Océan, Sunset) dans les options !",
+                description = "Bénéficiez d'indices bienveillants et d'un mixeur audio zen (pluie, forêt, vagues) pour une concentration maximale. Essayez aussi le thème OLED Nuit !",
                 tip = "Rappelez-vous: Le Sudoku est une méditation logique. Prenez votre temps."
             )
         )
@@ -122,7 +131,7 @@ fun InteractiveTutorialModal(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Guide Zen",
+                            text = "Guide Interactive Zen",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -141,7 +150,7 @@ fun InteractiveTutorialModal(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 // Step indicators
                 Row(
@@ -164,7 +173,12 @@ fun InteractiveTutorialModal(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Spotlight Graphic Preview
+                TutorialSpotlightGraphic(stepIndex = currentStep)
+
+                Spacer(modifier = Modifier.height(16.dp))
 
                 // Animated step content
                 val step = steps[currentStep]
@@ -177,29 +191,9 @@ fun InteractiveTutorialModal(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Surface(
-                            modifier = Modifier.size(64.dp),
-                            shape = RoundedCornerShape(20.dp),
-                            color = MaterialTheme.colorScheme.primaryContainer
-                        ) {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = targetStep.icon,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    modifier = Modifier.size(32.dp)
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
                         Text(
                             text = targetStep.title,
-                            fontSize = 20.sp,
+                            fontSize = 19.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
                             textAlign = TextAlign.Center
@@ -214,7 +208,7 @@ fun InteractiveTutorialModal(
                             modifier = Modifier.padding(top = 2.dp)
                         )
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
 
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
@@ -223,14 +217,14 @@ fun InteractiveTutorialModal(
                         ) {
                             Text(
                                 text = targetStep.description,
-                                fontSize = 14.sp,
+                                fontSize = 13.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(16.dp),
-                                lineHeight = 20.sp
+                                modifier = Modifier.padding(14.dp),
+                                lineHeight = 18.sp
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
 
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
@@ -242,7 +236,7 @@ fun InteractiveTutorialModal(
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                modifier = Modifier.padding(12.dp)
+                                modifier = Modifier.padding(10.dp)
                             )
                         }
                     }
@@ -302,3 +296,212 @@ private data class TutorialStep(
     val description: String,
     val tip: String
 )
+
+@Composable
+private fun TutorialSpotlightGraphic(stepIndex: Int) {
+    val infiniteTransition = rememberInfiniteTransition(label = "SpotlightPulsing")
+    val pulseScale by infiniteTransition.animateFloat(
+        initialValue = 1.0f,
+        targetValue = 1.25f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(800),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "PulseScale"
+    )
+    val pulseAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.8f,
+        targetValue = 0.2f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(800),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "PulseAlpha"
+    )
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(130.dp),
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            when (stepIndex) {
+                0 -> {
+                    // Grid spotlight diagram
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Box(contentAlignment = Alignment.Center) {
+                            // Pulsing Spotlight Halo
+                            Box(
+                                modifier = Modifier
+                                    .size(68.dp)
+                                    .scale(pulseScale)
+                                    .background(
+                                        MaterialTheme.colorScheme.primary.copy(alpha = pulseAlpha * 0.4f),
+                                        CircleShape
+                                    )
+                                    .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
+                            )
+                            // Mini 3x3 Grid
+                            Column(
+                                modifier = Modifier
+                                    .size(54.dp)
+                                    .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(8.dp))
+                                    .border(1.5.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp))
+                                    .padding(4.dp),
+                                verticalArrangement = Arrangement.SpaceEvenly
+                            ) {
+                                repeat(3) { row ->
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceEvenly
+                                    ) {
+                                        repeat(3) { col ->
+                                            val isTarget = row == 1 && col == 1
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(12.dp)
+                                                    .background(
+                                                        if (isTarget) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                                                        RoundedCornerShape(3.dp)
+                                                    ),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text(
+                                                    text = if (isTarget) "5" else "",
+                                                    fontSize = 8.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = MaterialTheme.colorScheme.onPrimary
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        Text(
+                            text = "🎯 Focus sur la case sélectionnée",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+                }
+                1 -> {
+                    // Input modes spotlight diagram
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.surface,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                        ) {
+                            Row(modifier = Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Text("👆", fontSize = 16.sp)
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Case d'abord", fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                            }
+                        }
+
+                        Box(contentAlignment = Alignment.Center) {
+                            Box(
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .scale(pulseScale)
+                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = pulseAlpha * 0.4f), CircleShape)
+                            )
+                            Icon(Icons.Default.TouchApp, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer
+                        ) {
+                            Row(modifier = Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Text("🔢", fontSize = 16.sp)
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Chiffre d'abord", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                            }
+                        }
+                    }
+                }
+                2 -> {
+                    // Pencil Notes & Stack Undo Spotlight diagram
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        // Pencil cell
+                        Box(contentAlignment = Alignment.Center) {
+                            Box(
+                                modifier = Modifier
+                                    .size(52.dp)
+                                    .scale(pulseScale)
+                                    .background(MaterialTheme.colorScheme.tertiary.copy(alpha = pulseAlpha * 0.4f), RoundedCornerShape(12.dp))
+                            )
+                            Surface(
+                                modifier = Modifier.size(44.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                color = MaterialTheme.colorScheme.surface,
+                                border = androidx.compose.foundation.BorderStroke(1.5.dp, MaterialTheme.colorScheme.tertiary)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text("1 3 7", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.tertiary)
+                                }
+                            }
+                        }
+
+                        Text("➕", fontSize = 16.sp)
+
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.secondaryContainer
+                        ) {
+                            Row(modifier = Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Text("↩️ Undo Stack", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                            }
+                        }
+                    }
+                }
+                else -> {
+                    // Hints & Audio spotlight
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(20.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .scale(pulseScale)
+                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = pulseAlpha * 0.4f), CircleShape)
+                            )
+                            Icon(Icons.Default.Lightbulb, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp))
+                        }
+
+                        Box(contentAlignment = Alignment.Center) {
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .scale(pulseScale)
+                                    .background(MaterialTheme.colorScheme.secondary.copy(alpha = pulseAlpha * 0.4f), CircleShape)
+                            )
+                            Text("🎧", fontSize = 24.sp)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+

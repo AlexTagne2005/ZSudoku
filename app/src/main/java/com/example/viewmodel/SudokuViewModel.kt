@@ -51,7 +51,10 @@ data class SudokuUiState(
     val shakeTriggerCount: Int = 0,
     val isDailyChallenge: Boolean = false,
     val dailyDateString: String = "",
-    val showTutorial: Boolean = false
+    val showTutorial: Boolean = false,
+    val isAdaptiveModeActive: Boolean = false,
+    val showGesturePractice: Boolean = false,
+    val graduatedBrainTierInfo: com.example.model.BrainLevelInfo? = null
 )
 
 class SudokuViewModel(application: Application) : AndroidViewModel(application) {
@@ -113,9 +116,33 @@ class SudokuViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    fun toggleGesturePractice(show: Boolean) {
+        _uiState.update { it.copy(showGesturePractice = show) }
+    }
+
+    private fun calculateAdaptiveClueOffset(difficulty: Difficulty): Int {
+        val state = _uiState.value
+        if (!state.settings.isAdaptiveDifficultyEnabled) return 0
+        val bestTime = when (difficulty) {
+            Difficulty.EASY -> state.stats.bestTimeEasy
+            Difficulty.MEDIUM -> state.stats.bestTimeMedium
+            Difficulty.HARD -> state.stats.bestTimeHard
+            Difficulty.EXPERT -> state.stats.bestTimeExpert
+        }
+        val threshold = when (difficulty) {
+            Difficulty.EASY -> 150L
+            Difficulty.MEDIUM -> 270L
+            Difficulty.HARD -> 420L
+            Difficulty.EXPERT -> 600L
+        }
+        return if (bestTime in 1..threshold) -2 else 0
+    }
+
     fun startNewGame(difficulty: Difficulty) {
         viewModelScope.launch {
-            val newCells = SudokuGenerator.generatePuzzle(difficulty)
+            val offset = calculateAdaptiveClueOffset(difficulty)
+            val isAdaptive = offset != 0
+            val newCells = SudokuGenerator.generatePuzzle(difficulty, adaptiveClueOffset = offset)
             _uiState.update {
                 it.copy(
                     cells = newCells,
@@ -134,7 +161,8 @@ class SudokuViewModel(application: Application) : AndroidViewModel(application) 
                     redoStack = emptyList(),
                     zenQuote = zenQuotes.random(),
                     isDailyChallenge = false,
-                    dailyDateString = ""
+                    dailyDateString = "",
+                    isAdaptiveModeActive = isAdaptive
                 )
             }
             startTimer()
@@ -395,11 +423,18 @@ class SudokuViewModel(application: Application) : AndroidViewModel(application) 
 
             if (isWin) {
                 viewModelScope.launch {
+                    val prevBrainInfo = com.example.model.BrainEvolutionCalculator.calculate(_uiState.value.stats)
                     repository.recordGameCompleted(currentState.currentDifficulty.name, currentState.elapsedSeconds, calculatedStars)
                     if (currentState.isDailyChallenge && currentState.dailyDateString.isNotEmpty()) {
                         repository.recordDailyCompleted(currentState.dailyDateString)
                     }
                     repository.clearSavedGame()
+
+                    val updatedStats = repository.getStatsDirect()
+                    val newBrainInfo = com.example.model.BrainEvolutionCalculator.calculate(updatedStats)
+                    if (newBrainInfo.level > prevBrainInfo.level) {
+                        _uiState.update { it.copy(graduatedBrainTierInfo = newBrainInfo) }
+                    }
                 }
             } else if (isGameOver) {
                 viewModelScope.launch {
@@ -787,6 +822,10 @@ class SudokuViewModel(application: Application) : AndroidViewModel(application) 
             )
             repository.updateSettings(updatedSettings)
         }
+    }
+
+    fun dismissBrainGraduationModal() {
+        _uiState.update { it.copy(graduatedBrainTierInfo = null) }
     }
 
     override fun onCleared() {

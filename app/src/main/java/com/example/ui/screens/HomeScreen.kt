@@ -18,6 +18,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.EmojiEvents
@@ -279,6 +280,19 @@ fun HomeScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(bottom = 6.dp)
+                            ) {
+                                Text(
+                                    text = "💾 BROUILLON SAUVEGARDÉ",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                )
+                            }
                             Text(
                                 text = "Reprendre la partie",
                                 fontSize = 20.sp,
@@ -286,9 +300,9 @@ fun HomeScreen(
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                             Text(
-                                text = "Niveau: $savedDifficulty • Temps: ${formatTime(savedTime)}",
+                                text = "Niveau: $savedDifficulty • Temps écoulé: ${formatTime(savedTime)}",
                                 fontSize = 13.sp,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f),
                                 modifier = Modifier.padding(top = 2.dp)
                             )
                         }
@@ -350,6 +364,12 @@ fun HomeScreen(
                     label = "Guide",
                     onClick = onOpenTutorial,
                     testTag = "bottom_nav_guide"
+                )
+                BottomNavItem(
+                    icon = Icons.Default.AccountCircle,
+                    label = "Profil",
+                    onClick = onOpenStatsSelect,
+                    testTag = "bottom_nav_profile"
                 )
                 BottomNavItem(
                     icon = Icons.Default.BarChart,

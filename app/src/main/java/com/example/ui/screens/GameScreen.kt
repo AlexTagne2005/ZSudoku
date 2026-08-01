@@ -77,11 +77,13 @@ import com.example.ui.components.SudokuActionBar
 import com.example.ui.components.SudokuGrid
 import com.example.ui.components.SudokuKeypad
 
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import android.widget.Toast
 import com.example.ui.components.AudioMixerModal
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -102,6 +104,7 @@ fun GameScreen(
     isTimerRunning: Boolean,
     isTimerVisible: Boolean,
     isDarkTheme: Boolean,
+    isHapticsEnabled: Boolean = true,
     notesStyle: String = "GRID",
     isAmbientEnabled: Boolean = false,
     rainVolume: Float = 0.5f,
@@ -117,6 +120,7 @@ fun GameScreen(
     shakeTriggerCount: Int = 0,
     isDailyChallenge: Boolean = false,
     showTutorial: Boolean = false,
+    isAdaptiveModeActive: Boolean = false,
     onCellClick: (row: Int, col: Int) -> Unit,
     onDigitClick: (Int) -> Unit,
     onToggleInputMode: () -> Unit,
@@ -198,7 +202,7 @@ fun GameScreen(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = difficulty.displayName,
+                            text = if (isAdaptiveModeActive) "${difficulty.displayName} • ⚡ Adaptatif" else difficulty.displayName,
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -216,6 +220,20 @@ fun GameScreen(
                     }
                 },
                 actions = {
+                    IconButton(
+                        onClick = {
+                            if (isHapticsEnabled) soundManager.vibrateShort()
+                            Toast.makeText(context, "💾 Brouillon sauvegardé ! Vous pourrez reprendre cette partie à tout moment.", Toast.LENGTH_SHORT).show()
+                        },
+                        modifier = Modifier.testTag("save_draft_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Bookmark,
+                            contentDescription = "Sauvegarder Brouillon",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+
                     IconButton(
                         onClick = { showAudioMixer = true },
                         modifier = Modifier.testTag("open_audio_mixer_button")
@@ -345,12 +363,19 @@ fun GameScreen(
                     selectedDigit = selectedDigit,
                     isDarkTheme = isDarkTheme,
                     notesStyle = notesStyle,
-                    onCellClick = onCellClick,
+                    onCellClick = { r, c ->
+                        if (isHapticsEnabled) soundManager.vibrateShort()
+                        onCellClick(r, c)
+                    },
                     onTwoFingerTapToClear = {
                         soundManager.playEraseSound()
+                        if (isHapticsEnabled) soundManager.vibrateShort()
                         onTwoFingerTapToClear()
                     },
-                    onSwipeToggleInputMode = onSwipeToggleInputMode,
+                    onSwipeToggleInputMode = {
+                        if (isHapticsEnabled) soundManager.vibrateShort()
+                        onSwipeToggleInputMode()
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 4.dp)
@@ -362,11 +387,30 @@ fun GameScreen(
                     canUndo = canUndo,
                     canRedo = canRedo,
                     isPencilActive = isPencilActive,
-                    onUndoClick = { soundManager.playDigitSound(); onUndoClick() },
-                    onRedoClick = { soundManager.playDigitSound(); onRedoClick() },
-                    onEraseClick = { soundManager.playEraseSound(); onEraseClick() },
-                    onPencilClick = { soundManager.playDigitSound(); onPencilClick() },
-                    onHintClick = onHintClick
+                    onUndoClick = {
+                        soundManager.playDigitSound()
+                        if (isHapticsEnabled) soundManager.vibrateShort()
+                        onUndoClick()
+                    },
+                    onRedoClick = {
+                        soundManager.playDigitSound()
+                        if (isHapticsEnabled) soundManager.vibrateShort()
+                        onRedoClick()
+                    },
+                    onEraseClick = {
+                        soundManager.playEraseSound()
+                        if (isHapticsEnabled) soundManager.vibrateShort()
+                        onEraseClick()
+                    },
+                    onPencilClick = {
+                        soundManager.playDigitSound()
+                        if (isHapticsEnabled) soundManager.vibrateShort()
+                        onPencilClick()
+                    },
+                    onHintClick = {
+                        if (isHapticsEnabled) soundManager.vibrateShort()
+                        onHintClick()
+                    }
                 )
 
                 // Keypad
@@ -374,8 +418,15 @@ fun GameScreen(
                     cells = cells,
                     selectedDigit = selectedDigit,
                     inputMode = inputMode,
-                    onDigitClick = { digit -> soundManager.playDigitSound(); onDigitClick(digit) },
-                    onToggleInputMode = onToggleInputMode,
+                    onDigitClick = { digit ->
+                        soundManager.playDigitSound()
+                        if (isHapticsEnabled) soundManager.vibrateShort()
+                        onDigitClick(digit)
+                    },
+                    onToggleInputMode = {
+                        if (isHapticsEnabled) soundManager.vibrateShort()
+                        onToggleInputMode()
+                    },
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
             }

@@ -76,3 +76,12 @@ val SunsetBgDark = Color(0xFF1F120B)
 val SunsetSurfaceDark = Color(0xFF331E12)
 val SunsetVariantDark = Color(0xFF4A2B1B)
 
+// --- OLED HIGH CONTRAST NIGHT THEME (Pure Black & Vibrant Cyan) ---
+val OledPrimary = Color(0xFF00E5FF)
+val OledOnPrimary = Color(0xFF000000)
+val OledBg = Color(0xFF000000)
+val OledSurface = Color(0xFF0D0D0D)
+val OledVariant = Color(0xFF1A1A1A)
+val OledTextPrimary = Color(0xFFFFFFFF)
+val OledTextMuted = Color(0xFFA0A0A0)
+

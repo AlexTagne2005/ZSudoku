@@ -56,5 +56,6 @@ data class SettingsEntity(
     val isAmbientEnabled: Boolean = false,
     val rainVolume: Float = 0.5f,
     val forestVolume: Float = 0.3f,
-    val wavesVolume: Float = 0.4f
+    val wavesVolume: Float = 0.4f,
+    val isAdaptiveDifficultyEnabled: Boolean = true
 )

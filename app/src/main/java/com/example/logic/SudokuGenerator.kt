@@ -6,7 +6,11 @@ import kotlin.random.Random
 
 object SudokuGenerator {
 
-    fun generatePuzzle(difficulty: Difficulty, random: Random = Random(System.currentTimeMillis() + Random.nextInt())): List<SudokuCell> {
+    fun generatePuzzle(
+        difficulty: Difficulty,
+        random: Random = Random(System.currentTimeMillis() + Random.nextInt()),
+        adaptiveClueOffset: Int = 0
+    ): List<SudokuCell> {
         // 1. Generate full solved grid
         val solution = Array(9) { IntArray(9) }
         SudokuSolver.solve(solution, randomize = true, random = random)
@@ -16,7 +20,7 @@ object SudokuGenerator {
 
         // Determine number of cells to remove
         val totalCells = 81
-        val targetClues = difficulty.clueCount
+        val targetClues = (difficulty.clueCount + adaptiveClueOffset).coerceIn(18, 55)
         var cellsToRemove = totalCells - targetClues
 
         val positions = (0 until 81).toList().shuffled(random)
