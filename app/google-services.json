@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "213692909046",
+    "project_id": "zensudoku-aef6e",
+    "storage_bucket": "zensudoku-aef6e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:213692909046:android:b268f9d33d55bfd35c73d7",
+        "android_client_info": {
+          "package_name": "com.aistudio.zensudoku.qvkzpt"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCZ8-EiKou06-BnT79grW7XvhOAANQbYIo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
