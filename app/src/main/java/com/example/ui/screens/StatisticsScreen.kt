@@ -47,14 +47,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.StatsEntity
+import com.example.data.backend.CloudSyncRepository
+import com.example.data.backend.CloudUserProfile
+import com.example.ui.components.CloudLeaderboardCard
 import com.example.model.BadgeManager
 import com.example.model.BrainEvolutionCalculator
 import com.example.model.ZenBadge
+import kotlinx.coroutines.flow.Flow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatisticsScreen(
     stats: StatsEntity,
+    cloudSyncRepository: CloudSyncRepository? = null,
+    leaderboardFlow: Flow<List<CloudUserProfile>>? = null,
+    onManualSync: () -> Unit = {},
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -125,6 +132,15 @@ fun StatisticsScreen(
 
             // Zen Mastery Badges
             ZenMasteryBadgesCard(badges = badges)
+
+            // Cloud Leaderboard & Backend Info
+            if (cloudSyncRepository != null && leaderboardFlow != null) {
+                CloudLeaderboardCard(
+                    cloudSyncRepository = cloudSyncRepository,
+                    leaderboardFlow = leaderboardFlow,
+                    onManualSync = onManualSync
+                )
+            }
 
             Text(
                 text = "Progression par Difficulté",

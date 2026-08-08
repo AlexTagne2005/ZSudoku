@@ -1,17 +1,56 @@
-# ZenSudoku - Native Android Application
+# 🧩 ZenSudoku — Application Android Native
 
-**ZenSudoku** is a serene, stress-free Sudoku app built natively for Android using **Kotlin**, **Jetpack Compose**, and **Material 3**. Designed for calm and frictionless gameplay, it prioritizes peaceful reflection without forced timers or penalizing error limits.
+**ZenSudoku** est une application Android moderne, élégante et apaisante développée en **Kotlin** et **Jetpack Compose**. Conçue pour offrir une expérience de jeu fluide, gratifiante et sans stress, l'application associe un générateur de grille de Sudoku performant avec un système unique de **Maturation Cérébrale** (Brain Evolution).
 
-## Key Features
+---
 
-- **Soothing Aesthetics & Themes**: Warm sand/beige light theme and night blue/slate dark theme.
-- **Zen Mode (Default)**: Play without stressful timers or instant loss states.
-- **Dual Input Modes**:
-  - *Cell First*: Tap a cell on the grid, then tap a number.
-  - *Digit First*: Tap a number on the keypad, then tap cells to place it.
-- **Pencil / Note Mode**: Toggle candidate notes for complex cells. Auto-clear notes option available.
-- **Smart Visual Assistance**: Crosshair row/column/block highlight and matching number glow.
-- **Unlimited Undo & Redo**: Step backward or forward through every move.
-- **Auto-Save & Local Persistence**: State, elapsed time, and notes are saved automatically with **Room Database**. Resume anytime!
-- **Opt-In Zen Hint**: Voluntarily trigger a mindful 3-second pause to reveal difficult digits.
-- **Comprehensive Statistics**: Track total games played, win streaks, and best completion times across Easy, Medium, Hard, and Expert difficulties.
+## 🌟 Fonctionnalités Clés
+
+### 🧠 Évolution Cérébrale & Arbre Synaptique
+- **5 Paliers de Progression** : Du *Neurone Intuitif* à l'*Esprit Zen Absolu*.
+- **Calcul Dynamique du Score Cognitif** : Calculé en fonction du taux de réussite, des étoiles obtenues, des séries de victoires et du temps moyen de résolution.
+- **Carte Résumé & Indicateur de Progression** : Visualisez le nombre de victoires au rythme actuel nécessaires pour atteindre le niveau supérieur.
+- **Animation Célebratoire d'Élévation** : Fenêtre modale animée déclenchée lors de la remise d'un nouveau palier.
+
+### 🎮 Gameplay Sudoku & Modes Intelligents
+- **4 Niveaux de Difficulté** : Facile, Moyen, Difficile, Expert.
+- **Mode Adaptatif Intelligent** : Ajuste la difficulté en temps réel selon la vitesse et la précision du joueur.
+- **Défi Quotidien (Daily Challenge)** : Un casse-tête unique chaque jour avec calendrier de suivi et récompenses d'étoiles.
+- **Saisie Flexible** :
+  - *Cellule d'abord* ou *Chiffre d'abord*.
+  - Mode *Crayon / Notes* automatique ou manuel.
+  - Annulation & Rétablissement illimités (*Undo / Redo*).
+- **Gestes & Secousse (Shake-to-Erase)** : Secouez le téléphone ou effectuez des glissements rapides pour effacer ou basculer les notes (avec module d'entraînement aux gestes).
+
+### 🎶 Ambiance Sonore Synthétisée
+- Générateur audio ambiant temps réel utilisant `AudioTrack` pour produire des fréquences douces binaurales et méditatives pendant vos sessions de réflexion.
+
+---
+
+## 🛠️ Architecture & Technologies
+
+- **UI Framework** : [Jetpack Compose](https://developer.android.com/jetpack/compose) avec Design System [Material 3](https://m3.material.io/)
+- **Langage** : Kotlin 100% Native
+- **Persistance des Données** : [Room Database](https://developer.android.com/training/data-storage/room) & KSP (Caches de grilles, statistiques, paramètres utilisateur)
+- **Gestion d'État** : ViewModel, `StateFlow` & `collectAsStateWithLifecycle`
+- **Navigation** : Jetpack Navigation Compose
+- **Thèmes & Accessibilité** : Support automatique des thèmes Clair / Sombre, animations fluides et cibles tactiles conformes aux normes M3.
+
+---
+
+## 🚀 Compilateur & Lancement
+
+```bash
+# Compilation et vérification du projet
+./gradlew assembleDebug
+
+# Exécution des tests unitaires
+./gradlew testDebugUnitTest
+```
+
+---
+
+## 📄 Licence
+
+Projet développé avec passion pour l'entraînement cognitif et la sérénité.
+

@@ -170,6 +170,9 @@ fun ZenSudokuApp(
         composable(Routes.STATISTICS) {
             StatisticsScreen(
                 stats = uiState.stats,
+                cloudSyncRepository = viewModel.cloudSyncRepository,
+                leaderboardFlow = viewModel.leaderboardFlow,
+                onManualSync = { viewModel.syncCurrentStatsToCloud() },
                 onBack = { navController.popBackStack() }
             )
         }

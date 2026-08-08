@@ -20,6 +20,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.example.data.backend.CloudSyncRepository
+import com.example.model.BrainEvolutionCalculator
 import com.example.util.AmbientAudioMixer
 
 data class SudokuUiState(
@@ -60,6 +62,9 @@ data class SudokuUiState(
 class SudokuViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: SudokuRepository
+    val cloudSyncRepository = CloudSyncRepository(application)
+    val leaderboardFlow = cloudSyncRepository.getLeaderboardFlow()
+
     private val _uiState = MutableStateFlow(SudokuUiState())
     val uiState: StateFlow<SudokuUiState> = _uiState.asStateFlow()
 
@@ -96,6 +101,10 @@ class SudokuViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             repository.stats.collectLatest { stats ->
                 _uiState.update { it.copy(stats = stats) }
+                if (cloudSyncRepository.isFirebaseInitialized) {
+                    val brainInfo = BrainEvolutionCalculator.calculate(stats)
+                    cloudSyncRepository.syncStatsToCloud(stats, brainInfo)
+                }
             }
         }
 
@@ -826,6 +835,14 @@ class SudokuViewModel(application: Application) : AndroidViewModel(application) 
 
     fun dismissBrainGraduationModal() {
         _uiState.update { it.copy(graduatedBrainTierInfo = null) }
+    }
+
+    fun syncCurrentStatsToCloud() {
+        viewModelScope.launch {
+            val stats = repository.getStatsDirect()
+            val brainInfo = com.example.model.BrainEvolutionCalculator.calculate(stats)
+            cloudSyncRepository.syncStatsToCloud(stats, brainInfo)
+        }
     }
 
     override fun onCleared() {
