@@ -60,6 +60,7 @@ if (file("google-services.json").exists()) {
 }
 
 dependencies {
+    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.7")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
