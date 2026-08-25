@@ -11,6 +11,9 @@ import com.example.logic.SudokuGenerator
 import com.example.model.BoardSnapshot
 import com.example.model.Difficulty
 import com.example.model.InputMode
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import com.example.model.SudokuCell
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -20,12 +23,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import com.example.data.backend.CloudSyncRepository
 import com.example.model.BrainEvolutionCalculator
 import com.example.util.AmbientAudioMixer
 
 data class SudokuUiState(
-    val cells: List<SudokuCell> = emptyList(),
+    val cells: PersistentList<SudokuCell> = persistentListOf(),
     val selectedRow: Int? = null,
     val selectedCol: Int? = null,
     val selectedDigit: Int? = null,
@@ -39,8 +44,8 @@ data class SudokuUiState(
     val errorCount: Int = 0,
     val maxErrors: Int = 3,
     val starsCount: Int = 0,
-    val undoStack: List<BoardSnapshot> = emptyList(),
-    val redoStack: List<BoardSnapshot> = emptyList(),
+    val undoStack: PersistentList<BoardSnapshot> = persistentListOf(),
+    val redoStack: PersistentList<BoardSnapshot> = persistentListOf(),
     val settings: SettingsEntity = SettingsEntity(),
     val stats: StatsEntity = StatsEntity(),
     val hasSavedGame: Boolean = false,
@@ -65,12 +70,22 @@ class SudokuViewModel(application: Application) : AndroidViewModel(application) 
     val cloudSyncRepository = CloudSyncRepository(application)
     val leaderboardFlow = cloudSyncRepository.getLeaderboardFlow()
 
+
+    private val _elapsedSeconds = MutableStateFlow(0L)
+    val elapsedSeconds: StateFlow<Long> = _elapsedSeconds.asStateFlow()
+
+    private val _isTimerRunning = MutableStateFlow(false)
+    val isTimerRunning: StateFlow<Boolean> = _isTimerRunning.asStateFlow()
+
     private val _uiState = MutableStateFlow(SudokuUiState())
     val uiState: StateFlow<SudokuUiState> = _uiState.asStateFlow()
 
     val ambientAudioMixer = AmbientAudioMixer()
 
     private var timerJob: Job? = null
+
+    private var saveJob: Job? = null
+
 
     private val zenQuotes = listOf(
         "In stillness, clarity unfolds.",
@@ -151,7 +166,9 @@ class SudokuViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             val offset = calculateAdaptiveClueOffset(difficulty)
             val isAdaptive = offset != 0
-            val newCells = SudokuGenerator.generatePuzzle(difficulty, adaptiveClueOffset = offset)
+            val newCells = withContext(Dispatchers.Default) {
+                SudokuGenerator.generatePuzzle(difficulty, adaptiveClueOffset = offset)
+            }.toPersistentList().toPersistentList()
             _uiState.update {
                 it.copy(
                     cells = newCells,
@@ -160,14 +177,14 @@ class SudokuViewModel(application: Application) : AndroidViewModel(application) 
                     selectedDigit = null,
                     isPencilActive = false,
                     currentDifficulty = difficulty,
-                    elapsedSeconds = 0L,
-                    isTimerRunning = true,
+
+
                     isCompleted = false,
                     isGameOver = false,
                     errorCount = 0,
                     starsCount = 0,
-                    undoStack = emptyList(),
-                    redoStack = emptyList(),
+                    undoStack = persistentListOf<BoardSnapshot>(),
+                    redoStack = persistentListOf<BoardSnapshot>(),
                     zenQuote = zenQuotes.random(),
                     isDailyChallenge = false,
                     dailyDateString = "",
@@ -185,7 +202,9 @@ class SudokuViewModel(application: Application) : AndroidViewModel(application) 
             val dateString = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
             val seed = dateString.replace("-", "").toLongOrNull() ?: 20260801L
             val random = kotlin.random.Random(seed)
-            val newCells = SudokuGenerator.generatePuzzle(Difficulty.MEDIUM, random)
+            val newCells = withContext(Dispatchers.Default) {
+                SudokuGenerator.generatePuzzle(Difficulty.MEDIUM, random)
+            }.toPersistentList().toPersistentList()
 
             _uiState.update {
                 it.copy(
@@ -195,14 +214,14 @@ class SudokuViewModel(application: Application) : AndroidViewModel(application) 
                     selectedDigit = null,
                     isPencilActive = false,
                     currentDifficulty = Difficulty.MEDIUM,
-                    elapsedSeconds = 0L,
-                    isTimerRunning = true,
+
+
                     isCompleted = false,
                     isGameOver = false,
                     errorCount = 0,
                     starsCount = 0,
-                    undoStack = emptyList(),
-                    redoStack = emptyList(),
+                    undoStack = persistentListOf<BoardSnapshot>(),
+                    redoStack = persistentListOf<BoardSnapshot>(),
                     zenQuote = "Défi Quotidien - $dateString",
                     isDailyChallenge = true,
                     dailyDateString = dateString
@@ -227,9 +246,9 @@ class SudokuViewModel(application: Application) : AndroidViewModel(application) 
             val dbGame = repository.savedGame
             dbGame.collectLatest { saved ->
                 if (saved != null && saved.cellsJson.isNotEmpty()) {
-                    val cells = repository.parseCells(saved.cellsJson)
-                    val undo = repository.parseSnapshots(saved.undoStackJson)
-                    val redo = repository.parseSnapshots(saved.redoStackJson)
+                    val cells = repository.parseCells(saved.cellsJson).toPersistentList().toPersistentList()
+                    val undo = repository.parseSnapshots(saved.undoStackJson).toPersistentList()
+                    val redo = repository.parseSnapshots(saved.redoStackJson).toPersistentList()
                     val diff = try { Difficulty.valueOf(saved.difficultyName) } catch (e: Exception) { Difficulty.EASY }
                     val isGameOver = saved.errorCount >= saved.maxErrors && !saved.isCompleted
 
@@ -237,13 +256,13 @@ class SudokuViewModel(application: Application) : AndroidViewModel(application) 
                         it.copy(
                             cells = cells,
                             currentDifficulty = diff,
-                            elapsedSeconds = saved.elapsedSeconds,
+
                             isCompleted = saved.isCompleted,
                             isGameOver = isGameOver,
                             errorCount = saved.errorCount,
                             maxErrors = saved.maxErrors,
-                            undoStack = undo,
-                            redoStack = redo,
+                            undoStack = undo.toPersistentList(),
+                            redoStack = redo.toPersistentList(),
                             isTimerRunning = !saved.isCompleted && !isGameOver,
                             zenQuote = zenQuotes.random()
                         )
@@ -261,10 +280,10 @@ class SudokuViewModel(application: Application) : AndroidViewModel(application) 
         timerJob = viewModelScope.launch {
             while (true) {
                 delay(1000L)
-                if (_uiState.value.isTimerRunning && !_uiState.value.isCompleted) {
-                    _uiState.update { it.copy(elapsedSeconds = it.elapsedSeconds + 1) }
+                if (_isTimerRunning.value && !_uiState.value.isCompleted) {
+                    _elapsedSeconds.update { it + 1 }
                     // Auto-save periodically every 10 seconds
-                    if (_uiState.value.elapsedSeconds % 10 == 0L) {
+                    if (_elapsedSeconds.value % 10 == 0L) {
                         saveCurrentGame()
                     }
                 }
@@ -273,13 +292,13 @@ class SudokuViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun pauseTimer() {
-        _uiState.update { it.copy(isTimerRunning = false) }
+        _isTimerRunning.update { false }
         saveCurrentGame()
     }
 
     fun resumeTimer() {
         if (!_uiState.value.isCompleted) {
-            _uiState.update { it.copy(isTimerRunning = true) }
+            _isTimerRunning.update { true }
         }
     }
 
@@ -349,7 +368,7 @@ class SudokuViewModel(application: Application) : AndroidViewModel(application) 
 
         // Push current state to undo stack before change
         val snapshot = BoardSnapshot(currentState.cells)
-        val newUndo = currentState.undoStack + snapshot
+        val newUndo = (currentState.undoStack + snapshot).toPersistentList()
 
         val updatedCells = currentState.cells.toMutableList()
 
@@ -417,15 +436,15 @@ class SudokuViewModel(application: Application) : AndroidViewModel(application) 
 
             _uiState.update {
                 it.copy(
-                    cells = finalBoard,
+                    cells = finalBoard.toPersistentList(),
                     selectedDigit = nextSelectedDigit,
                     errorCount = newErrorCount,
                     shakeTriggerCount = if (isError) it.shakeTriggerCount + 1 else it.shakeTriggerCount,
                     isGameOver = isGameOver,
                     isCompleted = isWin,
                     starsCount = calculatedStars,
-                    undoStack = newUndo,
-                    redoStack = emptyList(),
+                    undoStack = newUndo.toPersistentList(),
+                    redoStack = persistentListOf<BoardSnapshot>(),
                     isTimerRunning = !isWin && !isGameOver
                 )
             }
@@ -433,7 +452,7 @@ class SudokuViewModel(application: Application) : AndroidViewModel(application) 
             if (isWin) {
                 viewModelScope.launch {
                     val prevBrainInfo = com.example.model.BrainEvolutionCalculator.calculate(_uiState.value.stats)
-                    repository.recordGameCompleted(currentState.currentDifficulty.name, currentState.elapsedSeconds, calculatedStars)
+                    repository.recordGameCompleted(currentState.currentDifficulty.name, _elapsedSeconds.value, calculatedStars)
                     if (currentState.isDailyChallenge && currentState.dailyDateString.isNotEmpty()) {
                         repository.recordDailyCompleted(currentState.dailyDateString)
                     }
@@ -458,9 +477,9 @@ class SudokuViewModel(application: Application) : AndroidViewModel(application) 
         // Handle pencil update state
         _uiState.update {
             it.copy(
-                cells = updatedCells,
-                undoStack = newUndo,
-                redoStack = emptyList()
+                cells = updatedCells.toPersistentList(),
+                undoStack = newUndo.toPersistentList(),
+                redoStack = persistentListOf()
             )
         }
         saveCurrentGame()
@@ -474,7 +493,7 @@ class SudokuViewModel(application: Application) : AndroidViewModel(application) 
             val cellIndex = r * 9 + c
             if (cellIndex in currentState.cells.indices && !currentState.cells[cellIndex].isGiven) {
                 val snapshot = BoardSnapshot(currentState.cells)
-                val newUndo = currentState.undoStack + snapshot
+                val newUndo = (currentState.undoStack + snapshot).toPersistentList()
 
                 val updatedCells = currentState.cells.toMutableList()
                 val cell = updatedCells[cellIndex]
@@ -482,9 +501,9 @@ class SudokuViewModel(application: Application) : AndroidViewModel(application) 
 
                 _uiState.update {
                     it.copy(
-                        cells = updatedCells,
-                        undoStack = newUndo,
-                        redoStack = emptyList()
+                        cells = updatedCells.toPersistentList(),
+                        undoStack = newUndo.toPersistentList(),
+                        redoStack = persistentListOf()
                     )
                 }
                 saveCurrentGame()
@@ -508,14 +527,14 @@ class SudokuViewModel(application: Application) : AndroidViewModel(application) 
         val currentState = _uiState.value
         if (currentState.undoStack.isNotEmpty()) {
             val lastSnapshot = currentState.undoStack.last()
-            val newUndo = currentState.undoStack.dropLast(1)
+            val newUndo = currentState.undoStack.dropLast(1).toPersistentList().toPersistentList()
             val currentSnapshot = BoardSnapshot(currentState.cells)
-            val newRedo = currentState.redoStack + currentSnapshot
+            val newRedo = (currentState.redoStack + currentSnapshot).toPersistentList()
 
             _uiState.update {
                 it.copy(
-                    cells = lastSnapshot.cells,
-                    undoStack = newUndo,
+                    cells = lastSnapshot.cells.toPersistentList(),
+                    undoStack = newUndo.toPersistentList(),
                     redoStack = newRedo
                 )
             }
@@ -527,14 +546,14 @@ class SudokuViewModel(application: Application) : AndroidViewModel(application) 
         val currentState = _uiState.value
         if (currentState.redoStack.isNotEmpty()) {
             val nextSnapshot = currentState.redoStack.last()
-            val newRedo = currentState.redoStack.dropLast(1)
+            val newRedo = currentState.redoStack.dropLast(1).toPersistentList().toPersistentList()
             val currentSnapshot = BoardSnapshot(currentState.cells)
-            val newUndo = currentState.undoStack + currentSnapshot
+            val newUndo = (currentState.undoStack + currentSnapshot).toPersistentList()
 
             _uiState.update {
                 it.copy(
-                    cells = nextSnapshot.cells,
-                    undoStack = newUndo,
+                    cells = nextSnapshot.cells.toPersistentList(),
+                    undoStack = newUndo.toPersistentList(),
                     redoStack = newRedo
                 )
             }
@@ -578,7 +597,7 @@ class SudokuViewModel(application: Application) : AndroidViewModel(application) 
         if (targetIndex in currentState.cells.indices) {
             val cell = currentState.cells[targetIndex]
             val snapshot = BoardSnapshot(currentState.cells)
-            val newUndo = currentState.undoStack + snapshot
+            val newUndo = (currentState.undoStack + snapshot).toPersistentList()
 
             val updatedCells = currentState.cells.toMutableList()
             updatedCells[targetIndex] = cell.copy(
@@ -599,11 +618,11 @@ class SudokuViewModel(application: Application) : AndroidViewModel(application) 
 
             _uiState.update {
                 it.copy(
-                    cells = updatedCells,
+                    cells = updatedCells.toPersistentList(),
                     selectedRow = cell.row,
                     selectedCol = cell.col,
                     selectedDigit = cell.solutionValue,
-                    undoStack = newUndo,
+                    undoStack = newUndo.toPersistentList(),
                     isCompleted = isWin,
                     starsCount = hintStars,
                     isTimerRunning = !isWin
@@ -612,7 +631,7 @@ class SudokuViewModel(application: Application) : AndroidViewModel(application) 
 
             if (isWin) {
                 viewModelScope.launch {
-                    repository.recordGameCompleted(currentState.currentDifficulty.name, currentState.elapsedSeconds, hintStars)
+                    repository.recordGameCompleted(currentState.currentDifficulty.name, _elapsedSeconds.value, hintStars)
                     repository.clearSavedGame()
                 }
             } else {
@@ -628,14 +647,14 @@ class SudokuViewModel(application: Application) : AndroidViewModel(application) 
         }
         _uiState.update {
             it.copy(
-                cells = resetCells,
-                elapsedSeconds = 0L,
+                cells = resetCells.toPersistentList(),
+
                 errorCount = 0,
                 isCompleted = false,
                 isGameOver = false,
-                isTimerRunning = true,
-                undoStack = emptyList(),
-                redoStack = emptyList()
+
+                undoStack = persistentListOf<BoardSnapshot>(),
+                redoStack = persistentListOf()
             )
         }
         startTimer()
@@ -771,13 +790,15 @@ class SudokuViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     private fun saveCurrentGame() {
-        val state = _uiState.value
-        if (state.cells.isNotEmpty()) {
-            viewModelScope.launch {
+        saveJob?.cancel()
+        saveJob = viewModelScope.launch {
+            delay(1000L) // Debounce for 1 second
+            val state = _uiState.value
+            if (state.cells.isNotEmpty()) {
                 repository.saveGameProgress(
                     difficultyName = state.currentDifficulty.name,
                     cells = state.cells,
-                    elapsedSeconds = state.elapsedSeconds,
+                    elapsedSeconds = _elapsedSeconds.value,
                     isCompleted = state.isCompleted,
                     errorCount = state.errorCount,
                     maxErrors = state.maxErrors,
@@ -797,10 +818,10 @@ class SudokuViewModel(application: Application) : AndroidViewModel(application) 
             val cell = state.cells[cellIndex]
             if (!cell.isGiven && (cell.value != 0 || cell.notes.isNotEmpty())) {
                 val snapshot = BoardSnapshot(state.cells)
-                val newUndo = state.undoStack + snapshot
+                val newUndo = (state.undoStack + snapshot).toPersistentList()
                 val updated = state.cells.toMutableList()
                 updated[cellIndex] = cell.copy(value = 0, notes = emptySet(), isError = false)
-                _uiState.update { it.copy(cells = updated, undoStack = newUndo, redoStack = emptyList()) }
+                _uiState.update { it.copy(cells = updated.toPersistentList(), undoStack = newUndo.toPersistentList(), redoStack = persistentListOf()) }
                 saveCurrentGame()
             }
         }
